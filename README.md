@@ -147,7 +147,7 @@ The above command pulled the existing data out of Route53 and placed the results
 
 ## Supported providers
 
-| Provider | Record Support | GeoDNS Support | Notes |
+| Provider | Record Support | GeoDNS Support | Root NS support | Notes |
 |--|--|--|--|
 | [AzureProvider](/octodns/provider/azuredns.py) | A, AAAA, CNAME, MX, NS, PTR, SRV, TXT | No | |
 | [CloudflareProvider](/octodns/provider/cloudflare.py) | A, AAAA, ALIAS, CAA, CNAME, MX, NS, SPF, TXT | No | CAA tags restricted |

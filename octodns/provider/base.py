@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ..source.base import BaseSource
+from ..record import Delete
 from ..zone import Zone
 from .plan import Plan
 
@@ -30,8 +31,13 @@ class BaseProvider(BaseSource):
         '''
         An opportunity for providers to filter out false positives due to
         pecularities in their implementation. E.g. minimum TTLs.
+
+        By default we omit root NS record Deletes so that we NEVER delete them,
+        we'll allow Create and Update changes.
         '''
-        return True
+        return not (isinstance(change, Delete) and
+                    change.existing._type == 'NS' and
+                    change.existing.name == '')
 
     def _extra_changes(self, existing, changes):
         '''

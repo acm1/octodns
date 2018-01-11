@@ -284,15 +284,14 @@ class TestRoute53Provider(TestCase):
                 'Name': 'unit.tests.',
                 'Type': 'NS',
                 'ResourceRecords': [{
-                    'Value': 'ns1.unit.tests.',
+                    'Value': '8.2.3.4.',
+                }, {
+                    'Value': '9.2.3.4.',
                 }],
                 'TTL': 67,
             }, {
                 'Name': 'sub.unit.tests.',
                 'Type': 'NS',
-                'GeoLocation': {
-                    'ContinentCode': 'AF',
-                },
                 'ResourceRecords': [{
                     'Value': '5.2.3.4.',
                 }, {
@@ -1187,15 +1186,15 @@ class TestRoute53Provider(TestCase):
     @patch('octodns.provider.route53.Route53Provider._really_apply')
     def test_apply_1(self, really_apply_mock):
 
-        # 18 RRs with max of 19 should only get applied in one call
-        provider, plan = self._get_test_plan(19)
+        # 19 RRs with max of 20 should only get applied in one call
+        provider, plan = self._get_test_plan(20)
         provider.apply(plan)
         really_apply_mock.assert_called_once()
 
     @patch('octodns.provider.route53.Route53Provider._really_apply')
     def test_apply_2(self, really_apply_mock):
 
-        # 18 RRs with max of 17 should only get applied in two calls
+        # 18 RRs with max of 18 should only get applied in two calls
         provider, plan = self._get_test_plan(18)
         provider.apply(plan)
         self.assertEquals(2, really_apply_mock.call_count)
