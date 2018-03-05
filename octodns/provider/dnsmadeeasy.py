@@ -279,6 +279,14 @@ class DnsMadeEasyProvider(BaseProvider):
                 'type': record._type
             }
 
+    def _include_change(self, change):
+        '''
+        Root NS record management for DNSMadeEasy is currently unsupported.
+        '''
+        return not (change.record._type == 'NS' and
+                    change.record.name == '') and \
+            super(DnsMadeEasyProvider, self)._include_change(change)
+
     _params_for_A = _params_for_multiple
     _params_for_AAAA = _params_for_multiple
 

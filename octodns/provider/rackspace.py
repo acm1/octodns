@@ -221,6 +221,14 @@ class RackspaceProvider(BaseProvider):
                       len(zone.records) - before)
         return True
 
+    def _include_change(self, change):
+        '''
+        Root NS record management for RackSpace is currently unsupported.
+        '''
+        return not (change.record._type == 'NS' and
+                    change.record.name == '') and \
+            super(RackspaceProvider, self)._include_change(change)
+
     def _group_records(self, all_records):
         records = defaultdict(lambda: defaultdict(list))
         for record in all_records:

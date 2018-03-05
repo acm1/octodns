@@ -237,6 +237,14 @@ class DigitalOceanProvider(BaseProvider):
                       len(zone.records) - before, exists)
         return exists
 
+    def _include_change(self, change):
+        '''
+        Root NS record management for DigitalOcean is currently unsupported.
+        '''
+        return not (change.record._type == 'NS' and
+                    change.record.name == '') and \
+            super(DigitalOceanProvider, self)._include_change(change)
+
     def _params_for_multiple(self, record):
         for value in record.values:
             yield {

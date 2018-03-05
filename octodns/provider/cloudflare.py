@@ -80,7 +80,9 @@ class CloudflareProvider(BaseProvider):
             raise CloudflareError(resp.json())
         if resp.status_code == 403:
             raise CloudflareAuthenticationError(resp.json())
-
+        elif resp.status_code > 299:
+            self.log.warn("_request: status_code=%d, msg=%s", resp.status_code,
+                          resp.content)
         resp.raise_for_status()
         return resp.json()
 
@@ -260,7 +262,15 @@ class CloudflareProvider(BaseProvider):
         return exists
 
     def _include_change(self, change):
-        if isinstance(change, Update):
+        '''
+        Cloudflare doesn't allow management of root NS records, so no root NS
+        support. They also have a minimum TTL that is higher than records
+        elsewhere are commonly configured with so we need to prevent that
+        clamping from being a planned change.
+        '''
+        if change.record._type == 'NS' and change.record.name == '':
+            return False
+        elif isinstance(change, Update):
             existing = change.existing.data
             new = change.new.data
             new['ttl'] = max(self.MIN_TTL, new['ttl'])
@@ -273,7 +283,7 @@ class CloudflareProvider(BaseProvider):
                 change.record.value.endswith('.cdn.cloudflare.net.')):
             return False
 
-        return True
+        return super(CloudflareProvider, self)._include_change(change)
 
     def _contents_for_multiple(self, record):
         for value in record.values:

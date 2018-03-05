@@ -284,15 +284,14 @@ class TestRoute53Provider(TestCase):
                 'Name': 'unit.tests.',
                 'Type': 'NS',
                 'ResourceRecords': [{
-                    'Value': 'ns1.unit.tests.',
+                    'Value': '8.2.3.4.',
+                }, {
+                    'Value': '9.2.3.4.',
                 }],
                 'TTL': 67,
             }, {
                 'Name': 'sub.unit.tests.',
                 'Type': 'NS',
-                'GeoLocation': {
-                    'ContinentCode': 'AF',
-                },
                 'ResourceRecords': [{
                     'Value': '5.2.3.4.',
                 }, {
@@ -368,7 +367,7 @@ class TestRoute53Provider(TestCase):
                              {'HostedZoneId': 'z42'})
 
         plan = provider.plan(self.expected)
-        self.assertEquals(9, len(plan.changes))
+        self.assertEquals(10, len(plan.changes))
         self.assertTrue(plan.exists)
         for change in plan.changes:
             self.assertIsInstance(change, Create)
@@ -388,7 +387,7 @@ class TestRoute53Provider(TestCase):
                                  'SubmittedAt': '2017-01-29T01:02:03Z',
                              }}, {'HostedZoneId': 'z42', 'ChangeBatch': ANY})
 
-        self.assertEquals(9, provider.apply(plan))
+        self.assertEquals(10, provider.apply(plan))
         stubber.assert_no_pending_responses()
 
         # Delete by monkey patching in a populate that includes an extra record
@@ -601,7 +600,7 @@ class TestRoute53Provider(TestCase):
                              {})
 
         plan = provider.plan(self.expected)
-        self.assertEquals(9, len(plan.changes))
+        self.assertEquals(10, len(plan.changes))
         self.assertFalse(plan.exists)
         for change in plan.changes:
             self.assertIsInstance(change, Create)
@@ -649,7 +648,7 @@ class TestRoute53Provider(TestCase):
                                  'SubmittedAt': '2017-01-29T01:02:03Z',
                              }}, {'HostedZoneId': 'z42', 'ChangeBatch': ANY})
 
-        self.assertEquals(9, provider.apply(plan))
+        self.assertEquals(10, provider.apply(plan))
         stubber.assert_no_pending_responses()
 
     def test_health_checks_pagination(self):
@@ -1197,16 +1196,16 @@ class TestRoute53Provider(TestCase):
     @patch('octodns.provider.route53.Route53Provider._really_apply')
     def test_apply_1(self, really_apply_mock):
 
-        # 18 RRs with max of 19 should only get applied in one call
-        provider, plan = self._get_test_plan(19)
+        # 20 RRs with max of 21 should only get applied in one call
+        provider, plan = self._get_test_plan(21)
         provider.apply(plan)
         really_apply_mock.assert_called_once()
 
     @patch('octodns.provider.route53.Route53Provider._really_apply')
     def test_apply_2(self, really_apply_mock):
 
-        # 18 RRs with max of 17 should only get applied in two calls
-        provider, plan = self._get_test_plan(18)
+        # 19 RRs with max of 19 should only get applied in two calls
+        provider, plan = self._get_test_plan(19)
         provider.apply(plan)
         self.assertEquals(2, really_apply_mock.call_count)
 

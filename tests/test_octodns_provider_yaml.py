@@ -49,12 +49,12 @@ class TestYamlProvider(TestCase):
 
             # We add everything
             plan = target.plan(zone)
-            self.assertEquals(15, len(filter(lambda c: isinstance(c, Create),
+            self.assertEquals(16, len(filter(lambda c: isinstance(c, Create),
                                              plan.changes)))
             self.assertFalse(isfile(yaml_file))
 
             # Now actually do it
-            self.assertEquals(15, target.apply(plan))
+            self.assertEquals(16, target.apply(plan))
             self.assertTrue(isfile(yaml_file))
 
             # There should be no changes after the round trip
@@ -64,7 +64,7 @@ class TestYamlProvider(TestCase):
 
             # A 2nd sync should still create everything
             plan = target.plan(zone)
-            self.assertEquals(15, len(filter(lambda c: isinstance(c, Create),
+            self.assertEquals(16, len(filter(lambda c: isinstance(c, Create),
                                              plan.changes)))
 
             with open(yaml_file) as fh:

@@ -88,6 +88,14 @@ class OvhProvider(BaseProvider):
                       len(zone.records) - before, exists)
         return exists
 
+    def _include_change(self, change):
+        '''
+        Root NS record management for OVH is currently unsupported.
+        '''
+        return not (change.record._type == 'NS' and
+                    change.record.name == '') and \
+            super(OvhProvider, self)._include_change(change)
+
     def _apply(self, plan):
         desired = plan.desired
         changes = plan.changes

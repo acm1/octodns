@@ -267,8 +267,7 @@ class TestNs1Provider(TestCase):
             desired.add_record(r)
 
         plan = provider.plan(desired)
-        # everything except the root NS
-        expected_n = len(self.expected) - 1
+        expected_n = len(self.expected)
         self.assertEquals(expected_n, len(plan.changes))
         self.assertTrue(plan.exists)
 
