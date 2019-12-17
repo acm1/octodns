@@ -17,7 +17,8 @@ class PowerDnsBaseProvider(BaseProvider):
     SUPPORTS_DYNAMIC = False
     SUPPORTS = set(('A', 'AAAA', 'ALIAS', 'CAA', 'CNAME', 'MX', 'NAPTR', 'NS',
                     'PTR', 'SPF', 'SSHFP', 'SRV', 'TXT'))
-    TIMEOUT = 5
+    TIMEOUT = 60
+    BATCH_SIZE = 2000
 
     def __init__(self, id, host, api_key, port=8081, scheme="http",
                  timeout=TIMEOUT, *args, **kwargs):
@@ -326,45 +327,56 @@ class PowerDnsBaseProvider(BaseProvider):
         self.log.debug('_apply: zone=%s, len(changes)=%d', desired.name,
                        len(changes))
 
+        batch = []
         mods = []
-        for change in changes:
-            class_name = change.__class__.__name__
-            mods.append(getattr(self, '_mod_{}'.format(class_name))(change))
-        self.log.debug('_apply:   sending change request')
+        while True:
+            if len(changes) > self.BATCH_SIZE:
+                batch = changes[:self.BATCH_SIZE]
+                changes = changes[self.BATCH_SIZE:]
+            elif len(changes) > 0:
+                batch = changes
+                changes = []
+            else:
+                break
 
-        try:
-            self._patch('zones/{}'.format(desired.name),
-                        data={'rrsets': mods})
-            self.log.debug('_apply:   patched')
-        except HTTPError as e:
-            error = self._get_error(e)
-            if e.response.status_code != 422 or \
-               not error.startswith('Could not find domain '):
-                self.log.error('_apply:   status=%d, text=%s',
-                               e.response.status_code,
-                               e.response.text)
-                raise
-            self.log.info('_apply:   creating zone=%s', desired.name)
-            # 422 means powerdns doesn't know anything about the requested
-            # domain. We'll try to create it with the correct records instead
-            # of update. Hopefully all the mods are creates :-)
-            data = {
-                'name': desired.name,
-                'kind': 'Master',
-                'masters': [],
-                'nameservers': [],
-                'rrsets': mods,
-                'soa_edit_api': 'INCEPTION-INCREMENT',
-                'serial': 0,
-            }
+            for change in batch:
+                class_name = change.__class__.__name__
+                mods.append(getattr(self, '_mod_{}'.format(class_name))(change))
+            self.log.debug('_apply:   sending change request')
+
             try:
-                self._post('zones', data)
+                self._patch('zones/{}'.format(desired.name),
+                            data={'rrsets': mods})
+                self.log.debug('_apply:   patched')
             except HTTPError as e:
-                self.log.error('_apply:   status=%d, text=%s',
-                               e.response.status_code,
-                               e.response.text)
-                raise
-            self.log.debug('_apply:   created')
+                error = self._get_error(e)
+                if e.response.status_code != 422 or \
+                   not error.startswith('Could not find domain '):
+                    self.log.error('_apply:   status=%d, text=%s',
+                                   e.response.status_code,
+                                   e.response.text)
+                    raise
+                self.log.info('_apply:   creating zone=%s', desired.name)
+                # 422 means powerdns doesn't know anything about the requested
+                # domain. We'll try to create it with the correct records instead
+                # of update. Hopefully all the mods are creates :-)
+                data = {
+                    'name': desired.name,
+                    'kind': 'Master',
+                    'masters': [],
+                    'nameservers': [],
+                    'rrsets': mods,
+                    'soa_edit_api': 'INCEPTION-INCREMENT',
+                    'serial': 0,
+                }
+                try:
+                    self._post('zones', data)
+                except HTTPError as e:
+                    self.log.error('_apply:   status=%d, text=%s',
+                                   e.response.status_code,
+                                   e.response.text)
+                    raise
+                self.log.debug('_apply:   created')
 
         self.log.debug('_apply:   complete')
 
