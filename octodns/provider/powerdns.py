@@ -5,11 +5,12 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from requests import HTTPError, Session
 import logging
 
-from ..record import Create, Record
+from requests import HTTPError, Session
+
 from .base import BaseProvider
+from ..record import Create, Record
 
 
 class PowerDnsBaseProvider(BaseProvider):
@@ -178,10 +179,10 @@ class PowerDnsBaseProvider(BaseProvider):
                 # Nicer error message for auth problems
                 raise Exception('PowerDNS unauthorized host={}'
                                 .format(self.host))
-            elif e.response.status_code == 422:
-                # 422 means powerdns doesn't know anything about the requested
-                # domain. We'll just ignore it here and leave the zone
-                # untouched.
+            elif e.response.status_code in (404, 422):
+                # 404 or 422 means powerdns doesn't know anything about the
+                # requested domain. We'll just ignore it here and leave the
+                # zone untouched.
                 pass
             else:
                 # just re-throw
@@ -335,16 +336,18 @@ class PowerDnsBaseProvider(BaseProvider):
             self.log.debug('_apply:   patched')
         except HTTPError as e:
             error = self._get_error(e)
-            if e.response.status_code != 422 or \
-               not error.startswith('Could not find domain '):
+            if e.response.status_code != 404 and \
+                    not (e.response.status_code == 422 and
+                         error.startswith('Could not find domain ')):
                 self.log.error('_apply:   status=%d, text=%s',
                                e.response.status_code,
                                e.response.text)
                 raise
             self.log.info('_apply:   creating zone=%s', desired.name)
-            # 422 means powerdns doesn't know anything about the requested
-            # domain. We'll try to create it with the correct records instead
-            # of update. Hopefully all the mods are creates :-)
+            # 404 or 422 means powerdns doesn't know anything about the
+            # requested domain. We'll try to create it with the correct
+            # records instead of update. Hopefully all the mods are
+            # creates :-)
             data = {
                 'name': desired.name,
                 'kind': 'Master',
