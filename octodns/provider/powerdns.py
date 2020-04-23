@@ -354,7 +354,7 @@ class PowerDnsBaseProvider(BaseProvider):
                 'masters': [],
                 'nameservers': [],
                 'rrsets': mods,
-                'soa_edit_api': 'INCEPTION-INCREMENT',
+                'soa_edit_api': 'DEFAULT',
                 'serial': 0,
             }
             try:

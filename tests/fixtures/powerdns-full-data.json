@@ -258,6 +258,6 @@
     ],
     "serial": 2017012803,
     "soa_edit": "",
-    "soa_edit_api": "INCEPTION-INCREMENT",
+    "soa_edit_api": "DEFAULT",
     "url": "api/v1/servers/localhost/zones/unit.tests."
 }

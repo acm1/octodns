@@ -30,7 +30,7 @@ EMPTY_TEXT = '''
     "rrsets": [],
     "serial": 2017012801,
     "soa_edit": "",
-    "soa_edit_api": "INCEPTION-INCREMENT",
+    "soa_edit_api": "DEFAULT",
     "url": "api/v1/servers/localhost/zones/xunit.tests."
 }
 '''
